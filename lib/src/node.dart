@@ -31,11 +31,15 @@ class Node {
     this.children.addAll(nodes);
   }
 
-  String padIfNotEmpty(String content) {
+  String pad(String content) {
     if (content.isNotEmpty) {
       return " " + content;
     }
     return "";
+  }
+
+  String padAll(List<String> contentList) {
+    return this.pad(contentList.where((s) => s != "").join(" "));
   }
 
   String toString() {
@@ -79,7 +83,7 @@ class HeadlineNode extends Node {
   HeadlineNode({this.keyword, this.priority, this.tags, level})
       : super(level: level);
 
-  String toString() => "*" * this.level + this.padIfNotEmpty(super.toString());
+  String toString() => "*" * this.level + this.padAll([this.keyword, super.toString()]);
 }
 
 class SectionNode extends Node {
@@ -106,7 +110,26 @@ class TextNode extends Node {
 
   TextNode({this.value});
 
-  String toString() => this.value + this.padIfNotEmpty(super.toString());
+  String toString() => this.value + this.pad(super.toString());
 }
 
 class ParagraphNode extends Node {}
+
+class ListNode extends Node {
+  bool ordered;
+}
+
+class ListItemNode extends Node {
+  bool ordered;
+  bool checked;
+  String tag;
+  String bullet;
+  int indent;
+
+  ListItemNode({this.ordered, this.checked, this.tag, this.bullet, this.indent});
+
+  String toString() {
+    var space = " " * this.indent;
+    return space + this.bullet + this.pad(super.toString());
+  }
+}

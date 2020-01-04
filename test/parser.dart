@@ -5,15 +5,22 @@ import 'package:orga/src/parser.dart';
 void main() {
 
 
-  test("nested Headlines", () {
+  test("Core functionality", () {
     var parser = OrgParser(
         ParseOptions(todos: ['TODO', 'DONE'], timezone: 'Pacific/Auckland'));
     var content = '''
-* #HEADLINE# 1
-Paragraph
-** #HEADLINE# 1.1
-*** #HEADLINE# 1.1.1
-content
+* HEADLINE 1
+Some Paragraph with multiline
+text.
+- one
+- two
+- three
+  - nested one
+  - nested two
+- four
+** TODO HEADLINE 1.1
+*** DONE HEADLINE 1.1.1
+some text about how done this is
 ** #HEADLINE# 1.2
 * #HEADLINE# 2
 ** #HEADLINE# 2.2

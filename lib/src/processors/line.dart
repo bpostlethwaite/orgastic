@@ -1,12 +1,13 @@
 import '../parser.dart';
 import '../node.dart';
 import '../inline.dart' as inline;
+import '../lexer.dart';
 
 const TOKENS_BREAK_LINE = ["line", "block.end", "drawer.end"];
 
 mixin Line on Parser {
   
-  Node lineProcessor(token, section) {
+  Node lineProcessor(Token token, Node section) {
 
     List<Node> nodes = [];
     while (this.hasNext()) {

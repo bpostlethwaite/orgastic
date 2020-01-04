@@ -42,8 +42,7 @@ abstract class Parser {
   }
 
   Token consume() {
-    if (this.prefix.length > 0)
-      return this.prefix.removeAt(0);
+    if (this.prefix.length > 0) return this.prefix.removeAt(0);
     this.cursor++;
     return this.getToken(this.cursor);
   }
@@ -85,15 +84,13 @@ abstract class Parser {
       return cast<Node>(f.reflectee);
     }
 
-
     this.consume();
     return this.parseSection(section);
   }
 }
 
-class OrgParser extends Parser with Headline, Line {
+class OrgParser extends Parser with Headline, Line, Lists {
   OrgParser(ParseOptions options) {
-    //this.processors = Map<String, Processor>();
     this.prefix = [];
     this.options = options;
     this.lexer = Lexer(options);
