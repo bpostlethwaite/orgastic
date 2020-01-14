@@ -15,7 +15,7 @@ abstract class Parser {
   List<Token> prefix;
   Map<String, Processor> processors;
   InstanceMirror im;
-  num _cel;
+  num cel;
   num cursor;
   List<String> lines;
   List<Token> tokens;
@@ -77,7 +77,7 @@ abstract class Parser {
   Node parseSection(Node section) {
     var token = this.peek();
     if (token == null) return section;
-    if (token.name != "blank") this._cel = 0; // reset consecutive empty lines
+    if (token.name != "blank") this.cel = 0; // reset consecutive empty lines
     var methodSymbol = Symbol("${token.name}Processor");
     if (im.type.instanceMembers.containsKey(methodSymbol)) {
       InstanceMirror f = im.invoke(methodSymbol, [token, section]);
@@ -89,14 +89,12 @@ abstract class Parser {
   }
 }
 
-class OrgParser extends Parser with Headline, Line, Lists {
+class OrgParser extends Parser with Headline, Line, Lists, Blank {
   OrgParser(ParseOptions options) {
     this.prefix = [];
     this.options = options;
     this.lexer = Lexer(options);
-    this._cel = 0;
+    this.cel = 0;
     this.im = reflect(this);
-
-    //this.registerProcessor();
   }
 }

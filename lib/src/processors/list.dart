@@ -3,6 +3,7 @@ import '../inline.dart' as inline;
 import '../lexer.dart';
 import '../parser.dart';
 
+// TODO support Description Lists https://orgmode.org/manual/Plain-lists.html
 mixin Lists on Parser {
   Node listItemProcessor(Token token, Node section) {
     var parseListItem = () {
@@ -28,10 +29,15 @@ mixin Lists on Parser {
 
     Node parseList(int level) {
       var list = ListNode();
+      var ordered = null;
       while (this.hasNext()) {
         var token = this.peek();
         if (token.name != "listItem") break;
         if (token.data.indent <= level) break;
+        if (ordered != null && token.data.ordered != ordered) break;
+        if (ordered == null) {
+          ordered = token.data.ordered;
+        }
         var item = parseListItem();
         var sublist = parseList(token.data.indent);
         if (sublist != null) {
@@ -40,7 +46,7 @@ mixin Lists on Parser {
 
         list.add(item);
       }
-      if (list.children.length > 0) {
+      if ((list.children?.length ?? 0) > 0) {
         list.ordered = (list.children[0] as ListItemNode).ordered;
         return list;
       }

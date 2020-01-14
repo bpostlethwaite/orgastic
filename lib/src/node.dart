@@ -1,3 +1,5 @@
+import 'timestamp.dart' as timestamp;
+
 class Node {
   List<Node> children;
   Node parent;
@@ -5,7 +7,6 @@ class Node {
 
   Node({level}) {
     this._level = level;
-    this.children = [];
   }
 
   num get level {
@@ -31,9 +32,9 @@ class Node {
     this.children.addAll(nodes);
   }
 
-  String pad(String content) {
+  String pad(String content, {String padChar = " "}) {
     if (content.isNotEmpty) {
-      return " " + content;
+      return padChar + content;
     }
     return "";
   }
@@ -43,14 +44,21 @@ class Node {
   }
 
   String toString() {
-    return "" + this.children.map((node) => node.toString()).join("\n");
+    return this.children?.map((node) => node.toString())?.join("\n") ?? "";
+  }
+
+  forEach(Function (Node) f) {
+    f(this);
+    if (this.children != null) {
+      this.children.forEach((node) => node.forEach(f));
+    }
   }
 }
 
 class RootNode extends Node {
   RootNode() : super(level: 0);
 
-  String toString() =>  super.toString() + "\n";
+  String toString() => super.toString() + "\n";
 }
 
 class TimestampNode extends Node {
@@ -58,6 +66,10 @@ class TimestampNode extends Node {
   DateTime end;
 
   TimestampNode({this.date, this.end});
+
+  String toString() =>
+      timestamp.toOrgDateTimeString(this.date, this.end) +
+      this.pad(super.toString());
 }
 
 class PlanningNode extends TimestampNode {
@@ -83,7 +95,8 @@ class HeadlineNode extends Node {
   HeadlineNode({this.keyword, this.priority, this.tags, level})
       : super(level: level);
 
-  String toString() => "*" * this.level + this.padAll([this.keyword, super.toString()]);
+  String toString() =>
+      "*" * this.level + this.padAll([this.keyword ?? "", super.toString()]);
 }
 
 class SectionNode extends Node {
@@ -126,7 +139,8 @@ class ListItemNode extends Node {
   String bullet;
   int indent;
 
-  ListItemNode({this.ordered, this.checked, this.tag, this.bullet, this.indent});
+  ListItemNode(
+      {this.ordered, this.checked, this.tag, this.bullet, this.indent});
 
   String toString() {
     var space = " " * this.indent;

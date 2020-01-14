@@ -1,4 +1,5 @@
 import 'options.dart';
+import 'timestamp.dart' as timestamp;
 
 class Token {
   String name;
@@ -34,7 +35,9 @@ class TokenData {
       this.ordered,
       this.checked,
       this.tag,
-      this.bullet});
+      this.bullet,
+      this.date,
+      this.end});
 }
 
 typedef TokenData Tokenize(Match m);
@@ -54,15 +57,19 @@ List<_Rule> _rules = [
           r"^(\*+)\s+(?:(TODO|DONE)\s+)?(?:\[#(A|B|C)\]\s+)?(.*?)\s*(:(?:\w+:)+)?$"),
       (Match m) {
     var level = m.group(1).length;
-    var keyword = m.group(2) ?? "";
-    var priority = m.group(3) ?? "";
-    var content = m.group(4) ?? "";
-    var tag_group = m.group(5) ?? "";
+    var keyword = m.group(2);
+    var priority = m.group(3);
+    var content = m.group(4);
+    var tag_group = m.group(5);
     List<String> tags;
     if (tag_group != null && tag_group.length > 0) {
-      tags = tag_group.split(':').map((String str) => str.trim()).toList();
+      tags = tag_group
+          .split(':')
+          .map((String str) => str.trim())
+          .where((String tag) => tag.length > 0)
+          .toList();
     } else {
-      tags = [];
+      tags = null;
     }
     return TokenData(
         level: level,
@@ -72,30 +79,45 @@ List<_Rule> _rules = [
         tags: tags);
   }),
   _Rule(
-    "listItem",
-    RegExp(
-      r"^(\s*)([-+]|\d+[.)])\s+(?:\[(x|X|-| )\][ \t]+)?(?:([^\n]+)[ \t]+::[ \t]*)?(.*)$"
-    ),
+      "listItem",
+      RegExp(
+          r"^(\s*)([-+]|\d+[.)])\s+(?:\[(x|X|-| )\][ \t]+)?(?:([^\n]+)[ \t]+::[ \t]*)?(.*)$"),
       (Match m) {
-      var indent = m.group(1).length;
-      var bullet = m.group(2);
-      var checked = m.group(3) != " ";
-      var tag = m.group(4);
-      var content = m.group(5);
+    var indent = m.group(1).length;
+    var bullet = m.group(2);
+    var checked = m.group(3) != " ";
+    var tag = m.group(4);
+    var content = m.group(5);
 
-      var ordered = true;
-      if (bullet == "-" || bullet == "+") {
-        ordered == false;
-      }
-      return TokenData(
+    var ordered = true;
+    if (bullet == "-" || bullet == "+") {
+      ordered = false;
+    }
+    return TokenData(
         indent: indent,
         ordered: ordered,
         checked: checked,
         content: content,
         bullet: bullet,
         tag: tag);
-      }
-  )
+  }),
+  _Rule("keyword", RegExp(r"^\s*#\+(\w+):\s*(.*)$"), (Match m) {
+    var key = m.group(1);
+    var value = m.group(2);
+    return TokenData(keyword: key, content: value);
+  }),
+  _Rule("planning", RegExp(r"^\s*(DEADLINE|SCHEDULED|CLOSED):\s*(.+)$"),
+      (Match m) {
+    var keyword = m.group(1);
+    var parsedDate = timestamp.parse(input: m.group(2));
+    return TokenData(
+        keyword: keyword, date: parsedDate.date, end: parsedDate.end);
+  }),
+_Rule("timestamp", timestamp.Timestamp().regexp,
+    (Match m) {
+    var parsedDate = timestamp.parse(match: m);
+    return TokenData(date: parsedDate.date, end: parsedDate.end);
+    })
 ];
 
 class Lexer {
